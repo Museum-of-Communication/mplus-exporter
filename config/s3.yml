@@ -1,0 +1,4 @@
+region-name: "fra1"
+endpoint-url: "https://fra1.digitaloceanspaces.com"
+bucket-name: "museumplus"
+key-prefix: "extra_large"

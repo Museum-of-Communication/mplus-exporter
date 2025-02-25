@@ -1,0 +1,26 @@
+[project]
+name = "mplus-exporter"
+version = "0.1.0"
+description = "Exporter for MuseumPlus metadata and images"
+authors = [
+    {name = "Nicolas Kessler",email = "mail@nicolaskessler.ch"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "mpluspy @ git+https://github.com/Museum-of-Communication/mpluspy.git",
+    "boto3 (>=1.36.26,<2.0.0)",
+    "pyyaml (>=6.0.2,<7.0.0)",
+    "python-dotenv (>=1.0.1,<2.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+flake8 = "^7.1.2"
+black = "^25.1.0"
+

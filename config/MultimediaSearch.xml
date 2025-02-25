@@ -1,0 +1,27 @@
+<!--
+    Request body for Module Search. Returns all IDs of multimedia assets where
+    - modification date is younger than given date
+    - 'Inv. Status' of linked object (MulReferencesCre.MulObjectRef.ObjRecordingStatusVoc) is 'veröffentlicht' (205009)
+    - 'Typ' ('MulTypeVoc') is 'Bild' (31041)
+    - 'Status' ('MulStatusVoc') is not 'intern' (150337)
+
+-->
+<application xmlns="http://www.zetcom.com/ria/ws/module/search">
+    <modules>
+        <module name="Multimedia">
+            <search>
+                <select>
+                    <field fieldPath="__id"/>
+                </select>
+                <expert>
+                    <and>
+                        <greaterEquals fieldPath="__lastModified" operand="{timestamp}"/>
+                        <equalsField fieldPath="MulReferencesCre.MulObjectRef.ObjRecordingStatusVoc" operand="205009"/>
+                        <equalsField fieldPath="MulTypeVoc" operand="31041"/>
+                        <notEqualsField fieldPath="MulStatusVoc" operand="150337"/>
+                    </and>
+                </expert>
+            </search>
+        </module>
+    </modules>
+</application>

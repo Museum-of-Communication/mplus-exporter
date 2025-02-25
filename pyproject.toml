@@ -11,7 +11,8 @@ requires-python = ">=3.13"
 dependencies = [
     "mpluspy @ git+https://github.com/Museum-of-Communication/mpluspy.git",
     "boto3 (>=1.36.26,<2.0.0)",
-    "pyyaml (>=6.0.2,<7.0.0)"
+    "pyyaml (>=6.0.2,<7.0.0)",
+    "python-dotenv (>=1.0.1,<2.0.0)"
 ]
 
 

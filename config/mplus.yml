@@ -1,0 +1,17 @@
+# base settings MPlus API
+baseurl: "https://mpbernmfk.zetcom.com/MpWeb-mpBernMfK/"
+
+# MPlus API request definitions
+image-search:
+  type: "POST"
+  url: "ria-ws/application/module/Multimedia/search"
+  headers: 
+    Content-Type: "application/xml"
+    Accept: "application/xml"
+  xml-body: "config/MultimediaSearch.xml"
+
+image-download:
+  type: "GET"
+  url: "ria-ws/application/module/Multimedia/{id}/thumbnail?size=extra_large"
+  headers:
+    Content-Type: "application/octet-stream"

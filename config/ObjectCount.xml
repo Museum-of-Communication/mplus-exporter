@@ -1,0 +1,16 @@
+<!--
+Request body for Module Search. Filters for public objects only. Limit is 0 as only the size (i.e. number of results) is needed.
+-->
+<application xmlns="http://www.zetcom.com/ria/ws/module/search">
+    <modules>
+        <module name="Object">
+            <search limit="0" offset="0">
+                <expert>
+                    <and>
+                        <equalsField fieldPath="ObjRecordingStatusVoc" operand="205009"/>
+                    </and>
+                </expert>
+            </search>
+        </module>
+    </modules>
+</application>

@@ -19,7 +19,9 @@ class S3Client:
             aws_secret_access_key=secret_key,
         )
         self.BUCKET = S3_CONFIG["bucket-name"]
-        self.KEY_PREFIX = S3_CONFIG["key-prefix"]
+
+    def set_key_prefix(self, prefix: str):
+        self.key_prefix = prefix
 
     def check_key(self, key: str) -> bool:
         """Returns True if and only if a given key was found by client. Any exceptions result in False"""
@@ -46,4 +48,4 @@ class S3Client:
         return response["Body"].read().decode("utf-8")  # Decode bytes to string
 
     def __prefix_key(self, key: str) -> str:
-        return f"{self.KEY_PREFIX}/{key}"
+        return f"{self.key_prefix}/{key}" if hasattr(self, "key_prefix") else key

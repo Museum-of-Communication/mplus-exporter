@@ -1,0 +1,16 @@
+<!--
+Request body for Module Export. Filters for public objects only.
+-->
+<application xmlns="http://www.zetcom.com/ria/ws/module/search">
+    <modules>
+        <module name="Object">
+            <search limit="{limit}" offset="{offset}">
+                <expert>
+                    <and>
+                        <equalsField fieldPath="ObjRecordingStatusVoc" operand="205009"/>
+                    </and>
+                </expert>
+            </search>
+        </module>
+    </modules>
+</application>

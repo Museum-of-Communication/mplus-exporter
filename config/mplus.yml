@@ -15,3 +15,18 @@ image-download:
   url: "ria-ws/application/module/Multimedia/{id}/thumbnail?size=extra_large"
   headers:
     Content-Type: "application/octet-stream"
+
+object-count:
+  type: "POST"
+  url: "ria-ws/application/module/Object/search"
+  headers:
+    Content-Type: "application/xml"
+    Accept: "application/xml"
+  xml-body: "config/ObjectCount.xml"
+
+object-export:
+  type: "POST"
+  url: "ria-ws/application/module/Object/export/68013"
+  headers:
+    Content-Type: "application/xml"
+  xml-body: "config/ObjectExport.xml"

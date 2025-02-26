@@ -1,15 +1,15 @@
-import os
 import csv
 import io
 from dotenv import load_dotenv
 from datetime import datetime
-from s3client import S3Client
 from mpluspy import MPlusClient
+from abstract_exporter import AbstractExporter
+from logger import Logger
 
 load_dotenv()
 
 
-class ImgExporter:
+class ImgExporter(AbstractExporter):
 
     TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
     LAST_RUN_KEY = "last-run.txt"
@@ -17,13 +17,12 @@ class ImgExporter:
     CSV_HEADER = ["ID", "time-added"]
 
     def __init__(self):
-        self.s3 = S3Client(
-            "config/s3.yml", os.getenv("s3-access-key"), os.getenv("s3-secret-key")
-        )
-        mplus_auth = (os.getenv("mplus-user"), os.getenv("mplus-pass"))
-        self.mplus = MPlusClient("config/mplus.yml", auth=mplus_auth)
+        super().__init__()
+        # set upload folder for s3 client
+        self.s3.set_key_prefix("extra-large")
 
     def run_export(self):
+        """Runs export of new/changed thumbnail images from MPlus and saves them to S3."""
         # setup export and get state of last run
         self._setup_export()
 
@@ -65,7 +64,7 @@ class ImgExporter:
         self.s3.put_object(
             key=self.LAST_RUN_KEY,
             object=self.NOW.strftime(self.TIMESTAMP_FORMAT),
-            content_type="text/pain",
+            content_type="text/plain",
         )
 
     def _load_pending(self):
@@ -160,29 +159,14 @@ class ImgExporter:
     def _download_and_save_image(self, id_):
         self.s3.put_object(
             key=self._id_to_key(id_),
-            object=self.mplus.request("image-download", url_placeholders={"id": id_}).content,
+            object=self.mplus.request(
+                "image-download", url_placeholders={"id": id_}
+            ).content,
             content_type="image/jpeg",
         )
 
     def _id_to_key(self, id_):
         return f"{id_}.jpg"
-
-
-class Logger:
-    COLORS = {
-        "INFO": "\033[39m",  # White/Default
-        "WARNING": "\033[93m",  # Yellow
-        "ERROR": "\033[91m",  # Red
-        "SUCCESS": "\033[92m",  # Green
-        "RESET": "\033[0m",  # Reset color
-    }
-
-    @staticmethod
-    def log(text: str, type: str = "RESET"):
-        """Prints text in a color depending on the type."""
-        color = Logger.COLORS.get(type.upper(), Logger.COLORS["RESET"])
-        timestamp = datetime.now()
-        print(f"{timestamp} ===> {color}{text}{Logger.COLORS['RESET']}")
 
 
 def main():

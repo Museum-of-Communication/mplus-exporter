@@ -1,6 +1,6 @@
 # mplus-exporter
 Python scripts for exporting via the API for Zetcom's MuseumPlus to DigitalOcean Spaces.
-This setup is tailored for MfK's ([Museum of Communication, Bern](mfk.ch)) MuseumPlus instance. It provides images and object metadata to MfK's [Online Portal](mfk.rechercheonline.ch)
+This setup is tailored for MfK's ([Museum of Communication, Bern](https://mfk.ch)) MuseumPlus instance. It provides images and object metadata to MfK's [Online Portal](https://mfk.rechercheonline.ch)
 
 Requires Python and poetry.
 

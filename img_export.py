@@ -115,6 +115,9 @@ class ImgExporter(AbstractExporter):
                 self.pending[id_] = new[id_]
             elif new[id_][self.JSON_KEYS["size"]] != self.pending[id_][self.JSON_KEYS["size"]]:
                 self.pending[id_] = new[id_]
+            else:
+                Logger.log(f"{id_} already exists on S3. Skipping...")
+
 
     def _process_pending(self):
         """Iterates over each entry of currently pending images.
@@ -128,12 +131,7 @@ class ImgExporter(AbstractExporter):
             try:
                 key = self._id_to_key(id_)
 
-                if self.pending[id_][self.JSON_KEYS["state"]] == "uploaded":
-                    Logger.log(
-                        f"{key} already exists on S3. Skipping..."
-                    )
-
-                else:
+                if self.pending[id_][self.JSON_KEYS["state"]] == "pending":
                     Logger.log(f"Downloading {key}")
                     self._download_and_save_image(id_, self.pending[id_][self.JSON_KEYS["size"]])
                     self.pending[id_][self.JSON_KEYS["state"]] = "uploaded"

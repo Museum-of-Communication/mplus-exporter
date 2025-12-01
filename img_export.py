@@ -18,7 +18,7 @@ class ImgExporter(AbstractExporter):
     def __init__(self):
         super().__init__()
         # set upload folder for s3 client
-        self.s3.set_key_prefix("test")
+        self.s3.set_key_prefix("extra_large")
 
     def run_export(self):
         """Runs export of new/changed thumbnail images from MPlus and saves them to S3."""

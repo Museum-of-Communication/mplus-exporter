@@ -47,5 +47,12 @@ class S3Client:
         )
         return response["Body"].read().decode("utf-8")  # Decode bytes to string
 
+    def delete_object(self, key: str):
+        """Deletes object denoted by key drom S3"""
+        self.client.delete_object(
+            Bucket=self.BUCKET,
+            Key=self.__prefix_key(key)
+        )
+
     def __prefix_key(self, key: str) -> str:
         return f"{self.key_prefix}/{key}" if hasattr(self, "key_prefix") else key

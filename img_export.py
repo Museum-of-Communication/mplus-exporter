@@ -18,7 +18,7 @@ class ImgExporter(AbstractExporter):
     def __init__(self):
         super().__init__()
         # set upload folder for s3 client
-        self.s3.set_key_prefix("extra_large")
+        self.s3.set_key_prefix("test")
 
     def run_export(self):
         """Runs export of new/changed thumbnail images from MPlus and saves them to S3."""
@@ -37,6 +37,10 @@ class ImgExporter(AbstractExporter):
         self._process_pending()
 
         # save processed pending
+        self._save_pending()
+
+        # mirror deleted assets on s3
+        self._mirror_deleted_images()
         self._save_pending()
 
     def _setup_export(self):
@@ -169,6 +173,16 @@ class ImgExporter(AbstractExporter):
             ).content,
             content_type="image/jpeg",
         )
+
+    def _mirror_deleted_images(self):
+        """Search and delete images that have been removed/set to private in M+"""
+        Logger.log(f"Get IDs of all public digital assets in MPlus to check for deletions.")
+
+        public_images = self.mplus.request("image-search").parse_IDs()
+        for id_ in self.pending:
+            if not id_ in public_images:
+               self.s3.delete_object(self._id_to_key(id_))
+               self.pending[id_][self.JSON_KEYS["state"]] = "deleted"
 
     def _id_to_key(self, id_):
         return f"{id_}.jpg"

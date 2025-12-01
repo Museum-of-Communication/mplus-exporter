@@ -1,6 +1,5 @@
 <!--
-    Request body for Module Search. Returns all IDs of multimedia assets where
-    - modification date of either multimedia asset or linked object is younger than given date
+    Request body for Module Search. Returns all IDs of all public multimedia assets where
     - 'Inv. Status' of linked object (MulReferencesCre.MulObjectRef.ObjRecordingStatusVoc) is 'veröffentlicht' (205009)
     - 'Typ' ('MulTypeVoc') is 'Bild' (31041)
     - 'Status' ('MulStatusVoc') is not 'intern' (150337)
@@ -15,15 +14,9 @@
                 </select>
                 <expert>
                     <and>
-                        <or>
-                            <greaterEquals fieldPath="__lastModified" operand="{timestamp}"/>
-                            <greaterEquals fieldPath="MulReferencesCre.MulObjectRef.__lastModified" operand="{timestamp}"/>
-                        </or>
-                        <and>
-                            <equalsField fieldPath="MulReferencesCre.MulObjectRef.ObjRecordingStatusVoc" operand="205009"/>
-                            <equalsField fieldPath="MulTypeVoc" operand="31041"/>
-                            <notEqualsField fieldPath="MulStatusVoc" operand="150337"/>
-                        </and>
+                        <equalsField fieldPath="MulReferencesCre.MulObjectRef.ObjRecordingStatusVoc" operand="205009"/>
+                        <equalsField fieldPath="MulTypeVoc" operand="31041"/>
+                        <notEqualsField fieldPath="MulStatusVoc" operand="150337"/>
                     </and>
                 </expert>
             </search>

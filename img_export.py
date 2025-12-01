@@ -1,5 +1,4 @@
-import csv
-import io
+import json
 from dotenv import load_dotenv
 from datetime import datetime
 from mpluspy import MPlusClient
@@ -13,8 +12,8 @@ class ImgExporter(AbstractExporter):
 
     TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
     LAST_RUN_KEY = "last-run.txt"
-    PENDING_KEY = "pending.csv"
-    CSV_HEADER = ["ID", "time-added"]
+    PENDING_KEY = "pending.json"
+    JSON_KEYS = {"size": "size", "state": "state"}
 
     def __init__(self):
         super().__init__()
@@ -28,7 +27,7 @@ class ImgExporter(AbstractExporter):
 
         # query new images and add them to pending list
         new = self._query_for_new_images(self.last)
-        self._append_new_images(new if new else [])
+        self._update_pending(new if new else {})
 
         # save pending and last run before downloading images
         self._save_pending()
@@ -68,68 +67,76 @@ class ImgExporter(AbstractExporter):
         )
 
     def _load_pending(self):
-        """Load list of pending images from csv on S3. If the file is not found the list will be initialized as empty"""
+        """Load dict of pending images from json on S3. If the file is not found it will be initialized as empty"""
         key = self.PENDING_KEY
         if not self.s3.check_key(key):
             Logger.log(
-                f"No pending file found ({key}) on S3. Initializing empty list.",
+                f"No pending file found ({key}) on S3. Initializing empty.",
                 "WARNING",
             )
-            return []
+            return {}
 
         s = self.s3.get_object_string(key)
-        return list(csv.DictReader(io.StringIO(s)))
+        return json.loads(s)
 
     def _save_pending(self):
-        """Saves list of pending images as csv to S3"""
-        csv_buffer = io.StringIO()
-        writer = csv.DictWriter(csv_buffer, fieldnames=self.CSV_HEADER)
-        writer.writeheader()
-        writer.writerows(self.pending)
+        """Saves dict with img prcessing state as json to S3"""
         self.s3.put_object(
-            key=self.PENDING_KEY, object=csv_buffer.getvalue(), content_type="text/csv"
+            key=self.PENDING_KEY, object=json.dumps(self.pending), content_type="text/json"
         )
 
     def _query_for_new_images(self, last_run):
-        """Query Mplus for Digital Assets modifed after given date. Returns list of IDs"""
+        """Query Mplus for Digital Assets modifed after given date. Returns list dict of IDs with requested thumb size"""
         Logger.log(f"Get IDs of all digital assets in MPlus modified since {last_run}.")
         timestamp = MPlusClient.format_timestamp(last_run)
-        response = self.mplus.request(
-            "image-search", xml_placeholders={"timestamp": timestamp}
-        )
-        return response.parse_IDs()
+        result = {}
 
-    def _append_new_images(self, ids):
-        """Adds list of IDs to pending images"""
-        Logger.log(f"Adding {len(ids)} new entries to list of pending assets.")
-        self.pending.extend(
-            dict(zip(self.CSV_HEADER, [item, self.NOW])) for item in ids
+        # get medium images
+        response_medium = self.mplus.request(
+            "image-search-not-downloadable", xml_placeholders={"timestamp": timestamp}
         )
+        for id_ in response_medium.parse_IDs() or {}:
+            result[id_] = {self.JSON_KEYS["size"]: "medium", self.JSON_KEYS["state"]: "pending"}
+
+        # get extra-large images
+        response_extra_large = self.mplus.request(
+            "image-search-downloadable", xml_placeholders={"timestamp": timestamp}
+        )
+        for id_ in response_extra_large.parse_IDs() or {}:
+            result[id_] = {self.JSON_KEYS["size"]: "extra_large", self.JSON_KEYS["state"]: "pending"}
+
+        return result
+
+    def _update_pending(self, new):
+        """Adds dict of new IDs to pending images. Skips if ID is already present and updates sizes where needed."""
+        Logger.log(f"Checking and appending/updating {len(new)} entries for list of pending assets.")
+        for id_ in new:
+            if not id_ in self.pending:
+                self.pending[id_] = new[id_]
+            elif new[id_][self.JSON_KEYS["size"]] != self.pending[id_][self.JSON_KEYS["size"]]:
+                self.pending[id_] = new[id_]
 
     def _process_pending(self):
-        """Iterates over each entry of list of currently pending images.
-        If an entry already exists on S3 it is skipped and removed from pending.
+        """Iterates over each entry of currently pending images.
+        If an entry is already marked as uploaded it is skipped and removed from pending.
         If not the image is downloaded from the MuseumPlus API and saved to S3.
         """
         Logger.log("Processing pending images")
         aborted = False
-        done = []
 
-        for item in self.pending:
+        for id_ in self.pending:
             try:
-                id_ = item["ID"]
                 key = self._id_to_key(id_)
 
-                if self.s3.check_key(key):
+                if self.pending[id_][self.JSON_KEYS["state"]] == "uploaded":
                     Logger.log(
-                        f"{key} already exists on S3. Removing it from pending..."
+                        f"{key} already exists on S3. Skipping..."
                     )
 
                 else:
                     Logger.log(f"Downloading {key}")
-                    self._download_and_save_image(id_)
-
-                done.append(item)
+                    self._download_and_save_image(id_, self.pending[id_][self.JSON_KEYS["size"]])
+                    self.pending[id_][self.JSON_KEYS["state"]] = "uploaded"
 
             except KeyboardInterrupt:
                 # Terminate downloading if user sends keyboard interrupt
@@ -145,8 +152,6 @@ class ImgExporter(AbstractExporter):
                 )
                 aborted = True
 
-        self.pending = [item for item in self.pending if item not in done]
-
         Logger.log(
             (
                 "Some errors occurred. Pending images might still exist. Re-run the script to complete the process."
@@ -156,11 +161,11 @@ class ImgExporter(AbstractExporter):
             "WARNING" if aborted else "SUCCESS",
         )
 
-    def _download_and_save_image(self, id_):
+    def _download_and_save_image(self, id_, size):
         self.s3.put_object(
             key=self._id_to_key(id_),
             object=self.mplus.request(
-                "image-download", url_placeholders={"id": id_}
+                "image-download", url_placeholders={"id": id_, "size": size}
             ).content,
             content_type="image/jpeg",
         )

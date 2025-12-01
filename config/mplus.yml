@@ -10,9 +10,25 @@ image-search:
     Accept: "application/xml"
   xml-body: "config/MultimediaSearch.xml"
 
+image-search-downloadable:
+  type: "POST"
+  url: "ria-ws/application/module/Multimedia/search"
+  headers:
+    Content-Type: "application/xml"
+    Accept: "application/xml"
+  xml-body: "config/MultimediaSearchDownload.xml"
+
+image-search-not-downloadable:
+  type: "POST"
+  url: "ria-ws/application/module/Multimedia/search"
+  headers:
+    Content-Type: "application/xml"
+    Accept: "application/xml"
+  xml-body: "config/MultimediaSearchNoDownload.xml"
+
 image-download:
   type: "GET"
-  url: "ria-ws/application/module/Multimedia/{id}/thumbnail?size=extra_large"
+  url: "ria-ws/application/module/Multimedia/{id}/thumbnail?size={size}"
   headers:
     Content-Type: "application/octet-stream"
 

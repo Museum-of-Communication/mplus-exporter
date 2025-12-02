@@ -1,6 +1,6 @@
 [project]
 name = "mplus-exporter"
-version = "0.1.0"
+version = "0.2.0"
 description = "Exporter for MuseumPlus metadata and images"
 authors = [
     {name = "Nicolas Kessler",email = "mail@nicolaskessler.ch"}

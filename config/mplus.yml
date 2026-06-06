@@ -1,5 +1,5 @@
 # base settings MPlus API
-baseurl: "https://mpbernmfk.zetcom.com/MpWeb-mpBernMfK/"
+baseurl: "https://mpbernmfk.zetcom.app/"
 
 # MPlus API request definitions
 image-search:
